@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t mamun18/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true mamun18/react-test npm test
+
+after_success:
+  - docker build -t mamun18/multi-client ./client
+  - docker build -t mamun18/multi-nginx ./nginx
+  - docker build -t mamun18/multi-server ./server
+  - docker build -t mamun18/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images to push them into docker hub
+  - docker push mamun18/multi-client
+  - docker push mamun18/multi-nginx
+  - docker push mamun18/multi-server
+  - docker push mamun18/multi-worker
